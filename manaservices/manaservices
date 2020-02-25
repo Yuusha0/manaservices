@@ -1,4 +1,4 @@
-#!/usr/bin/python3 -O
+#!/usr/bin/env python3
 #  manaservices.py
 #  
 #  Copyright 2020 Yuusha
@@ -160,10 +160,10 @@ class MsDialog(basedialog.BaseDialog):
             startButton.setEnabled(True)
 
         # Changing line event
-        self.eventManager.addWidgetEvent(self.onSelectedEvent)
+        # self.eventManager.addWidgetEvent(self.onSelectedEvent)
 
         # Let's test a cancel event
-        # self.eventManager.addCancelEvent(self.onCancelEvent)
+        self.eventManager.addCancelEvent(self.onCancelEvent)
     
         # End Dialof layout
         
