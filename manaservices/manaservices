@@ -33,6 +33,8 @@ from os import getuid
 ## 
 ######################################################################
 
+# DEBUG INFO : You have to comment python-manatools/manatools/services.py from line 71 to 87 for testing this module.
+
 class MsDialog(basedialog.BaseDialog):
     def __init__(self):
         if getuid() == 0 :
@@ -41,19 +43,22 @@ class MsDialog(basedialog.BaseDialog):
             space = "User space"
         self._application_name = "Manaservices - ManaTools service manager"
         basedialog.BaseDialog.__init__(self, "Manatools service manager - {}".format(space), "", basedialog.DialogType.POPUP, 80, 10)
+        _serviceTable = None
+                
+        
 
     def _serviceInfo(self, service, infoPannel, servicesList):
         yui.YUI.ui().blockEvents()
         infoPannel.setValue(servicesList[service]['description'])
         yui.YUI.ui().unblockEvents()
 
-    def _fillServiceTable(self, tbl, servicesList):
+    def _fillServiceTable(self, servicesList):
         ''' fill service table with service info
         param
         tbl yui table
         '''            
-        tbl.startMultipleChanges()
-        tbl.deleteAllItems()
+        self._serviceTable.startMultipleChanges()
+        self._serviceTable.deleteAllItems()
 
         v=[]
         for service in sorted(servicesList):
@@ -67,8 +72,8 @@ class MsDialog(basedialog.BaseDialog):
             v.append(item)
 
         itemCollection = yui.YItemCollection(v)
-        tbl.addItems(itemCollection)       
-        tbl.doneMultipleChanges()
+        self._serviceTable.addItems(itemCollection)       
+        self._serviceTable.doneMultipleChanges()
         
     def UIlayout(self, layout):
         '''
@@ -90,34 +95,34 @@ class MsDialog(basedialog.BaseDialog):
         yTableHeader.addColumn("Status", yui.YAlignCenter)
         yTableHeader.addColumn("On boot")
 
-        serviceTable = self.mgaFactory.createCBTable(hbox, yTableHeader, yui.YCBTableCheckBoxOnLastColumn)
+        self._serviceTable = self.mgaFactory.createCBTable(hbox, yTableHeader, yui.YCBTableCheckBoxOnLastColumn)
 
         myserv = mnservices.Services()
         list_services = myserv.service_info
         ## Does not work
-        ## self._fillServiceTable(serviceTable,list_services)
+        self._fillServiceTable(list_services)
 
         # Work
-        serviceTable.startMultipleChanges()
-        serviceTable.deleteAllItems()
+        # self._serviceTable.startMultipleChanges()
+        # self._serviceTable.deleteAllItems()
 
-        v=[]
-        for service in sorted(list_services):
-            item = yui.YCBTableItem(service)
-            started = list_services[service]['active_state']
-            cell = yui.YTableCell(started)
-            item.addCell(cell)
+        # v=[]
+        # for service in sorted(list_services):
+        #     item = yui.YCBTableItem(service)
+        #     started = list_services[service]['active_state']
+        #     cell = yui.YTableCell(started)
+        #     item.addCell(cell)
 
-            item.check(service in list_services)
-            item.setLabel(service)
-            v.append(item)
+        #     item.check(service in list_services)
+        #     item.setLabel(service)
+        #     v.append(item)
 
-        itemCollection = yui.YItemCollection(v)
-        serviceTable.addItems(itemCollection)       
-        serviceTable.doneMultipleChanges()
+        # itemCollection = yui.YItemCollection(v)
+        # self._serviceTable.addItems(itemCollection)       
+        # self._serviceTable.doneMultipleChanges()
 
-        serviceTable.setImmediateMode(True)
-        serviceTable.setWeight(0,50)
+        self._serviceTable.setImmediateMode(True)
+        self._serviceTable.setWeight(0,50)
 
         # Info panel
         frame = self.factory.createFrame(hbox, "Information")
@@ -147,17 +152,18 @@ class MsDialog(basedialog.BaseDialog):
         self.eventManager.addWidgetEvent(quitButton, self.onQuit)
 
         # First item selection
-        item = serviceTable.selectedItem()
+        item = self._serviceTable.selectedItem()
+        print(self._serviceTable.selectedItem().label())
         if item :
             self._serviceInfo(item.label(), infoPanel, list_services)
             stopButton.setEnabled(True)
             startButton.setEnabled(True)
 
         # Changing line event
-        self.eventManager.addWidgetEvent(serviceTable, self.onSelectedEvent, sendWidget=True)
+        self.eventManager.addWidgetEvent(self.onSelectedEvent)
 
         # Let's test a cancel event
-        self.eventManager.addCancelEvent(self.onCancelEvent)
+        # self.eventManager.addCancelEvent(self.onCancelEvent)
     
         # End Dialof layout
         
@@ -180,10 +186,10 @@ class MsDialog(basedialog.BaseDialog):
             'description' : "manaservices is a tool to manage daemons",
         })
 
-    def onSelectedEvent(self, serviceTable) :
+    def onSelectedEvent(self) :
         print('Selection Event')
-        item = serviceTable.selectedItem()
-        print("test")
+#        item = self._serviceTable.selectedItem()
+#        print("test")
         ## if item :
         ##     self._serviceInfo(item.label(), infoPanel, list_services)
         ##     stopButton.setEnabled(True)
