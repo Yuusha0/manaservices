@@ -48,9 +48,11 @@ class MsDialog(basedialog.BaseDialog):
         
 
     def _serviceInfo(self, service, infoPannel, servicesList):
-        yui.YUI.ui().blockEvents()
-        infoPannel.setValue(servicesList[service]['description'])
-        yui.YUI.ui().unblockEvents()
+        if service:
+            yui.YUI.ui().blockEvents()
+            descr = servicesList[service]['description'] if 'description' in servicesList[service].keys() else "---"
+            infoPannel.setValue(desc)
+            yui.YUI.ui().unblockEvents()
 
     def _fillServiceTable(self, servicesList):
         ''' fill service table with service info
@@ -62,10 +64,8 @@ class MsDialog(basedialog.BaseDialog):
 
         v=[]
         for service in sorted(servicesList):
-            item = yui.YCBTableItem(service)
-            started = servicesList[service]['active_state']
-            cell = yui.YTableCell(started)
-            item.addCell(cell)
+            started = servicesList[service]['active_state'] if 'active_state' in servicesList[service].keys() else False
+            item = yui.YCBTableItem(service, "Active" if started else "Not active")
 
             item.check(service in servicesList)
             item.setLabel(service)
@@ -101,25 +101,6 @@ class MsDialog(basedialog.BaseDialog):
         list_services = myserv.service_info
         ## Does not work
         self._fillServiceTable(list_services)
-
-        # Work
-        # self._serviceTable.startMultipleChanges()
-        # self._serviceTable.deleteAllItems()
-
-        # v=[]
-        # for service in sorted(list_services):
-        #     item = yui.YCBTableItem(service)
-        #     started = list_services[service]['active_state']
-        #     cell = yui.YTableCell(started)
-        #     item.addCell(cell)
-
-        #     item.check(service in list_services)
-        #     item.setLabel(service)
-        #     v.append(item)
-
-        # itemCollection = yui.YItemCollection(v)
-        # self._serviceTable.addItems(itemCollection)       
-        # self._serviceTable.doneMultipleChanges()
 
         self._serviceTable.setImmediateMode(True)
         self._serviceTable.setWeight(0,50)
