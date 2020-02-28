@@ -24,7 +24,7 @@ import manatools.ui.common as common
 import manatools.ui.basedialog as basedialog
 import manatools.services as mnservices
 import yui
-import gettext
+# import gettext
 from os import getuid
 
 ######################################################################
@@ -43,7 +43,6 @@ class MsDialog(basedialog.BaseDialog):
             space = "User space"
         self._application_name = "Manaservices - ManaTools service manager"
         basedialog.BaseDialog.__init__(self, "Manatools service manager - {}".format(space), "", basedialog.DialogType.POPUP, 80, 10)
-        _serviceTable = None
                 
         
 
@@ -51,7 +50,7 @@ class MsDialog(basedialog.BaseDialog):
         if service:
             yui.YUI.ui().blockEvents()
             descr = servicesList[service]['description'] if 'description' in servicesList[service].keys() else "---"
-            infoPannel.setValue(desc)
+            infoPannel.setValue(descr)
             yui.YUI.ui().unblockEvents()
 
     def _fillServiceTable(self, servicesList):
@@ -63,16 +62,19 @@ class MsDialog(basedialog.BaseDialog):
         self._serviceTable.deleteAllItems()
 
         v=[]
+        itemCollection = yui.YItemCollection()
         for service in sorted(servicesList):
-            started = servicesList[service]['active_state'] if 'active_state' in servicesList[service].keys() else False
-            item = yui.YCBTableItem(service, "Active" if started else "Not active")
-
-            item.check(service in servicesList)
+            serv = servicesList[service]
+            started = serv['active_state'] if 'active_state' in serv.keys() else False
+            item = yui.YCBTableItem(service, started if started else "Not active")
+            enabled = serv['enabled'] if 'enabled' in serv.keys() else False
+            if enabled :
+                item.check(service in servicesList)
             item.setLabel(service)
-            v.append(item)
+            item.this.own(False)
+            itemCollection.push_back(item)
 
-        itemCollection = yui.YItemCollection(v)
-        self._serviceTable.addItems(itemCollection)       
+        self._serviceTable.addItems(itemCollection)
         self._serviceTable.doneMultipleChanges()
         
     def UIlayout(self, layout):
@@ -180,4 +182,3 @@ class MsDialog(basedialog.BaseDialog):
 if __name__ == '__main__':
     d = MsDialog()
     d.run()
-    
