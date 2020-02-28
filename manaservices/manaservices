@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
 #  manaservices.py
-#  
+#
 #  Copyright 2020 Yuusha
-#  
+#
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
 #  the Free Software Foundation; either version 3 of the License, or
 #  (at your option) any later version.
-#  
+#
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
-#  
+#
 #  You should have received a copy of the GNU General Public License
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA 02110-1301, USA.
-#  
-#  
+#
+#
 
 import manatools.ui.common as common
 import manatools.ui.basedialog as basedialog
@@ -28,23 +28,22 @@ import yui
 from os import getuid
 
 ######################################################################
-## 
+##
 ##  Manaservices
-## 
+##
 ######################################################################
 
 # DEBUG INFO : You have to comment python-manatools/manatools/services.py from line 71 to 87 for testing this module.
 
+
 class MsDialog(basedialog.BaseDialog):
     def __init__(self):
-        if getuid() == 0 :
+        if getuid() == 0:
             space = "System space"
-        else :
+        else:
             space = "User space"
         self._application_name = "Manaservices - ManaTools service manager"
         basedialog.BaseDialog.__init__(self, "Manatools service manager - {}".format(space), "", basedialog.DialogType.POPUP, 80, 10)
-                
-        
 
     def _serviceInfo(self, service, infoPannel, servicesList):
         if service:
@@ -57,18 +56,17 @@ class MsDialog(basedialog.BaseDialog):
         ''' fill service table with service info
         param
         tbl yui table
-        '''            
+        '''
         self._serviceTable.startMultipleChanges()
         self._serviceTable.deleteAllItems()
 
-        v=[]
         itemCollection = yui.YItemCollection()
         for service in sorted(servicesList):
             serv = servicesList[service]
             started = serv['active_state'] if 'active_state' in serv.keys() else False
             item = yui.YCBTableItem(service, started if started else "Not active")
             enabled = serv['enabled'] if 'enabled' in serv.keys() else False
-            if enabled :
+            if enabled:
                 item.check(service in servicesList)
             item.setLabel(service)
             item.this.own(False)
@@ -76,19 +74,19 @@ class MsDialog(basedialog.BaseDialog):
 
         self._serviceTable.addItems(itemCollection)
         self._serviceTable.doneMultipleChanges()
-        
+
     def UIlayout(self, layout):
         '''
         layout to setup UI for Manaservices
         '''
-        optFactory = yui.YUI.optionalWidgetFactory()
+        # optFactory = yui.YUI.optionalWidgetFactory()
         dialog = self.factory.createVBox(layout)
 
         # Line for heading
-        lbl1 = self.factory.createLabel((dialog), "A tool to manage your services", True, False)
+        self.factory.createLabel((dialog), "A tool to manage your services", True, False)
 
         vbox = self.factory.createVBox(layout)
-        frame = self.factory.createFrame(vbox,"")
+        frame = self.factory.createFrame(vbox, "")
         frmVbox = self.factory.createVBox(frame)
         hbox = self.factory.createHBox(frmVbox)
 
@@ -101,18 +99,17 @@ class MsDialog(basedialog.BaseDialog):
 
         myserv = mnservices.Services()
         list_services = myserv.service_info
-        ## Does not work
         self._fillServiceTable(list_services)
 
         self._serviceTable.setImmediateMode(True)
-        self._serviceTable.setWeight(0,50)
+        self._serviceTable.setWeight(0, 50)
 
         # Info panel
         frame = self.factory.createFrame(hbox, "Information")
-        frame.setWeight(0,30)
+        frame.setWeight(0, 30)
         frmVbox = self.factory.createVBox(frame)
         infoPanel = self.factory.createRichText(frmVbox, "--------------")
-        infoPanel.setAutoScrollDown();
+        infoPanel.setAutoScrollDown()
 
         # Service start button
         hbox = self.factory.createHBox(frmVbox)
@@ -126,10 +123,10 @@ class MsDialog(basedialog.BaseDialog):
         # buttons on the last line
         align = self.factory.createRight(layout)
         hbox = self.factory.createHBox(align)
-        aboutButton = self.factory.createPushButton(hbox, "&About" )
+        aboutButton = self.factory.createPushButton(hbox, "&About")
         self.eventManager.addWidgetEvent(aboutButton, self.onAbout)
         align = self.factory.createRight(hbox)
-        hbox     = self.factory.createHBox(align)
+        hbox = self.factory.createHBox(align)
         refreshButton = self.factory.createPushButton(hbox, "&Refresh")
         quitButton = self.factory.createPushButton(hbox, "&Quit")
         self.eventManager.addWidgetEvent(quitButton, self.onQuit)
@@ -137,7 +134,7 @@ class MsDialog(basedialog.BaseDialog):
         # First item selection
         item = self._serviceTable.selectedItem()
         print(self._serviceTable.selectedItem().label())
-        if item :
+        if item:
             self._serviceInfo(item.label(), infoPanel, list_services)
             stopButton.setEnabled(True)
             startButton.setEnabled(True)
@@ -147,29 +144,29 @@ class MsDialog(basedialog.BaseDialog):
 
         # Let's test a cancel event
         self.eventManager.addCancelEvent(self.onCancelEvent)
-    
+
         # End Dialof layout
-        
-    def onCancelEvent(self) :
+
+    def onCancelEvent(self):
         self.ExitLoop()
-        print ("Got a cancel event")
-    
-    def onQuit(self) :
-        print ("Quit button pressed")
+        print("Got a cancel event")
+
+    def onQuit(self):
+        print("Quit button pressed")
         self.ExitLoop()
 
-    def onAbout(self) :
+    def onAbout(self):
         ok = common.AboutDialog({
-            'name' : self._application_name,
-            'dialog_mode' : common.AboutDialogMode.TABBED,
-            'version' : "0.1.0",
-            'credits' :"Credits 2020 Yuusha",
-            'license' : 'GPLv3',
-            'authors' : 'Yuusha &lt;cyril.levet0780@orange.fr&gt;',
-            'description' : "manaservices is a tool to manage daemons",
+            'name': self._application_name,
+            'dialog_mode': common.AboutDialogMode.TABBED,
+            'version': "0.1.0",
+            'credits': "Credits 2020 Yuusha",
+            'license': 'GPLv3',
+            'authors': 'Yuusha &lt;cyril.levet0780@orange.fr&gt;',
+            'description': "manaservices is a tool to manage daemons",
         })
 
-    def onSelectedEvent(self) :
+    def onSelectedEvent(self):
         print('Selection Event')
 #        item = self._serviceTable.selectedItem()
 #        print("test")
