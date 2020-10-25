@@ -45,14 +45,14 @@ class MsDialog(basedialog.BaseDialog):
         self._application_name = "Manaservices - ManaTools service manager"
         basedialog.BaseDialog.__init__(self, "Manatools service manager - {}".format(space), "", basedialog.DialogType.POPUP, 80, 10)
 
-    def _serviceInfo(self, service, infoPannel, servicesList):
+    def _serviceInfo(self, service):
         if service:
             yui.YUI.ui().blockEvents()
-            descr = servicesList[service]['description'] if 'description' in servicesList[service].keys() else "---"
-            infoPannel.setValue(descr)
+            descr = self._list_services[service]['description'] if 'description' in self._list_services[service].keys() else "---"
+            self._infoPanel.setValue(descr)
             yui.YUI.ui().unblockEvents()
 
-    def _fillServiceTable(self, servicesList):
+    def _fillServiceTable(self):
         ''' fill service table with service info
         param
         tbl yui table
@@ -61,13 +61,13 @@ class MsDialog(basedialog.BaseDialog):
         self._serviceTable.deleteAllItems()
 
         itemCollection = yui.YItemCollection()
-        for service in sorted(servicesList):
-            serv = servicesList[service]
+        for service in sorted(self._list_services):
+            serv = self._list_services[service]
             started = serv['active_state'] if 'active_state' in serv.keys() else False
             item = yui.YCBTableItem(service, started if started else "Not active")
             enabled = serv['enabled'] if 'enabled' in serv.keys() else False
             if enabled:
-                item.check(service in servicesList)
+                item.check(service in self._list_services)
             item.setLabel(service)
             item.this.own(False)
             itemCollection.push_back(item)
@@ -98,8 +98,8 @@ class MsDialog(basedialog.BaseDialog):
         self._serviceTable = self.mgaFactory.createCBTable(hbox, yTableHeader, yui.YCBTableCheckBoxOnLastColumn)
 
         myserv = mnservices.Services()
-        list_services = myserv.service_info
-        self._fillServiceTable(list_services)
+        self._list_services = myserv.service_info
+        self._fillServiceTable()
 
         self._serviceTable.setImmediateMode(True)
         self._serviceTable.setWeight(0, 50)
@@ -108,15 +108,15 @@ class MsDialog(basedialog.BaseDialog):
         frame = self.factory.createFrame(hbox, "Information")
         frame.setWeight(0, 30)
         frmVbox = self.factory.createVBox(frame)
-        infoPanel = self.factory.createRichText(frmVbox, "--------------")
-        infoPanel.setAutoScrollDown()
+        self._infoPanel = self.factory.createRichText(frmVbox, "--------------")
+        self._infoPanel.setAutoScrollDown()
 
         # Service start button
         hbox = self.factory.createHBox(frmVbox)
-        startButton = self.factory.createPushButton(hbox, "&Start")
+        self._startButton = self.factory.createPushButton(hbox, "&Start")
 
         # Service stop button
-        stopButton = self.factory.createPushButton(hbox, "&Stop")
+        self._stopButton = self.factory.createPushButton(hbox, "&Stop")
 
         # Dialog buttons
         self.factory.createVSpacing(vbox, 1.0)
@@ -133,14 +133,13 @@ class MsDialog(basedialog.BaseDialog):
 
         # First item selection
         item = self._serviceTable.selectedItem()
-        print(self._serviceTable.selectedItem().label())
         if item:
-            self._serviceInfo(item.label(), infoPanel, list_services)
-            stopButton.setEnabled(True)
-            startButton.setEnabled(True)
+            self._serviceInfo(item.label())
+            self._stopButton.setEnabled(True)
+            self._startButton.setEnabled(True)
 
         # Changing line event
-        # self.eventManager.addWidgetEvent(self.onSelectedEvent)
+        self.eventManager.addWidgetEvent(self._serviceTable, self.onSelectedEvent)
 
         # Let's test a cancel event
         self.eventManager.addCancelEvent(self.onCancelEvent)
@@ -167,14 +166,21 @@ class MsDialog(basedialog.BaseDialog):
         })
 
     def onSelectedEvent(self):
-        print('Selection Event')
-#        item = self._serviceTable.selectedItem()
-#        print("test")
-        ## if item :
-        ##     self._serviceInfo(item.label(), infoPanel, list_services)
-        ##     stopButton.setEnabled(True)
-        ##     startButton.setEnabled(True)
-
+        event = self.dialog.waitForEvent()
+        wEvent = yui.toYWidgetEvent(event)
+        item = self._serviceTable.selectedItem()
+        if item :
+            self._serviceInfo(item.label())
+            self._stopButton.setEnabled(True)
+            self._startButton.setEnabled(True)
+        if wEvent.reason() == yui.YEvent.ValueChanged:
+            item = self._serviceTable.changedItem()
+            if item:
+                yui.YUI.app().busyCursor()
+                try:
+                    self._serviceTable.set_service
+                except:
+                    print("Description not found")
 
 if __name__ == '__main__':
     d = MsDialog()
